@@ -1,5 +1,5 @@
 # EU Device Classifier — MDR & IVDR Annex VIII
-** Access here --> https://afif718.github.io/eu-device-classifier/ **
+*   **Access here --> https://afif718.github.io/eu-device-classifier/ **
 
 A lightweight, single-page web application designed to assist regulatory affairs professionals and manufacturers in classifying medical products for the European market. 
 
