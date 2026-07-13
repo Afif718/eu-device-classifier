@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EU Device Classifier — MDR &amp; IVDR Annex VIII</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10151c;
+    --panel:#1a222c;
+    --panel-raised:#212b37;
+    --hairline:#2b3540;
+    --text:#edf1f5;
+    --text-muted:#8b98a6;
+    --text-faint:#5a6673;
+
+    --risk-1:#4fa88f;   /* Class I  / A */
+    --risk-2:#d6a73b;   /* Class IIa/ B */
+    --risk-3:#c1622b;   /* Class IIb/ C */
+    --risk-4:#b23a3a;   /* Class III/ D */
+
+    --font-display:'Newsreader', serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--risk-2); color:#10151c; }
+
+  a{ color:inherit; }
+
+  button{ font-family:inherit; cursor:pointer; }
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--risk-2);
+    outline-offset:3px;
+  }
+
+  .app{
+    max-width:920px;
+    margin:0 auto;
+    padding:32px 24px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  .masthead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    padding-bottom:22px;
+    margin-bottom:28px;
+    border-bottom:1px solid var(--hairline);
+    flex-wrap:wrap;
+  }
+  .masthead .brand{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--risk-2);
+  }
+  .brand h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:26px;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+  .masthead nav{
+    display:flex;
+    gap:18px;
+    font-size:13px;
+    color:var(--text-muted);
+  }
+  .masthead nav button{
+    background:none;border:none;color:inherit;font-size:13px;
+    padding:4px 0; border-bottom:1px solid transparent;
+  }
+  .masthead nav button:hover{ color:var(--text); border-bottom-color:var(--hairline); }
+
+  /* ---------- Landing ---------- */
+  .intro{
+    font-size:15px;
+    color:var(--text-muted);
+    max-width:60ch;
+    margin:0 0 30px;
+  }
+  .intro strong{ color:var(--text); font-weight:600; }
+
+  .picker{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:680px){ .picker{ grid-template-columns:1fr; } }
+
+  .frame-card{
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:10px;
+    padding:26px;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .frame-card:hover{ border-color:var(--text-faint); transform:translateY(-2px); }
+  .frame-card .tag{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.1em;
+    color:var(--text-muted);
+    text-transform:uppercase;
+  }
+  .frame-card h2{
+    font-family:var(--font-display);
+    font-size:22px;
+    margin:0;
+    font-weight:600;
+  }
+  .frame-card p{ margin:0; font-size:13.5px; color:var(--text-muted); }
+  .mini-ladder{
+    display:flex;
+    gap:4px;
+    margin-top:4px;
+  }
+  .mini-ladder span{
+    flex:1;
+    height:6px;
+    border-radius:3px;
+    opacity:.85;
+  }
+  .frame-card .go{
+    margin-top:6px;
+    align-self:flex-start;
+    background:transparent;
+    border:1px solid var(--text-faint);
+    color:var(--text);
+    padding:9px 16px;
+    border-radius:7px;
+    font-size:13px;
+    font-weight:500;
+  }
+  .frame-card .go:hover{ border-color:var(--risk-2); color:var(--risk-2); }
+
+  .rules-note{
+    margin-top:30px;
+    font-size:12.5px;
+    color:var(--text-faint);
+    border-top:1px solid var(--hairline);
+    padding-top:16px;
+  }
+
+  /* ---------- Wizard ---------- */
+  .wizard{ display:none; gap:34px; grid-template-columns:150px 1fr; }
+  .wizard.active{ display:grid; }
+  @media (max-width:680px){ .wizard.active{ grid-template-columns:1fr; } }
+
+  .rail{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .rail .step-count{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--text-muted);
+  }
+  .ladder{
+    display:flex;
+    flex-direction:column-reverse;
+    gap:5px;
+    height:220px;
+  }
+  @media (max-width:680px){ .ladder{ flex-direction:row; height:auto; } }
+  .rung{
+    flex:1;
+    border-radius:6px;
+    background:var(--panel-raised);
+    border:1px solid var(--hairline);
+    position:relative;
+    display:flex;
+    align-items:center;
+    padding:0 10px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-faint);
+    transition:background .25s ease, color .25s ease, border-color .25s ease;
+  }
+  @media (max-width:680px){ .rung{ justify-content:center; padding:8px 4px; } }
+  .rung.lit{ color:#10151c; font-weight:600; border-color:transparent; }
+  .rung[data-c="0"].lit{ background:var(--risk-1); }
+  .rung[data-c="1"].lit{ background:var(--risk-2); }
+  .rung[data-c="2"].lit{ background:var(--risk-3); }
+  .rung[data-c="3"].lit{ background:var(--risk-4); }
+
+  .rules-so-far{
+    font-size:11.5px;
+    color:var(--text-faint);
+  }
+  .rules-so-far b{ color:var(--text-muted); font-weight:600; }
+
+  .qcard{
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:30px 32px;
+    min-height:280px;
+    display:flex;
+    flex-direction:column;
+  }
+  @media (max-width:680px){ .qcard{ padding:22px; } }
+  .rule-tag{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.06em;
+    color:var(--risk-2);
+    text-transform:uppercase;
+    margin-bottom:12px;
+  }
+  .qtext{
+    font-family:var(--font-display);
+    font-size:21px;
+    line-height:1.4;
+    font-weight:500;
+    margin:0 0 26px;
+    max-width:58ch;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:auto;
+  }
+  .opt-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .opt{
+    background:var(--panel-raised);
+    border:1px solid var(--hairline);
+    color:var(--text);
+    padding:13px 18px;
+    border-radius:8px;
+    font-size:14.5px;
+    font-weight:500;
+    text-align:left;
+    flex:1;
+    min-width:140px;
+  }
+  .opt:hover{ border-color:var(--risk-2); background:#242f3b; }
+  .opt.yn{ text-align:center; flex:0 0 auto; min-width:110px; }
+
+  .qcard-foot{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+    padding-top:16px;
+    border-top:1px solid var(--hairline);
+  }
+  .back-link{
+    background:none; border:none; color:var(--text-faint); font-size:13px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .back-link:hover{ color:var(--text-muted); }
+  .switch-link{
+    background:none; border:none; color:var(--text-faint); font-size:12.5px;
+  }
+  .switch-link:hover{ color:var(--risk-2); }
+
+  /* ---------- Result ---------- */
+  .result{ display:none; }
+  .result.active{ display:block; }
+
+  .stamp-wrap{
+    display:flex;
+    gap:28px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+  }
+  .stamp{
+    flex:0 0 auto;
+    width:168px;
+    height:168px;
+    border-radius:50%;
+    border:3px solid currentColor;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    transform:rotate(-4deg);
+  }
+  .stamp::before{
+    content:"";
+    position:absolute;
+    inset:10px;
+    border:1px dashed currentColor;
+    border-radius:50%;
+    opacity:.5;
+  }
+  .stamp .cls{
+    font-family:var(--font-display);
+    font-size:44px;
+    font-weight:700;
+  }
+  .stamp .fw{
+    position:absolute;
+    bottom:30px;
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+
+  .result-summary{ flex:1; min-width:240px; }
+  .result-summary .verdict-label{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  .result-summary h2{
+    font-family:var(--font-display);
+    font-size:28px;
+    margin:0 0 8px;
+    font-weight:600;
+  }
+  .result-summary .lede{ color:var(--text-muted); font-size:14px; max-width:52ch; }
+
+  .matched-rules{
+    margin-top:28px;
+  }
+  .matched-rules h3{
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-faint);
+    margin:0 0 12px;
+    font-weight:600;
+  }
+  .rule-row{
+    display:flex;
+    gap:14px;
+    padding:12px 0;
+    border-top:1px solid var(--hairline);
+    align-items:baseline;
+  }
+  .rule-row.top{ background:rgba(255,255,255,.02); border-radius:8px; padding:12px 14px; border-top:1px solid var(--hairline); }
+  .rule-row .badge{
+    font-family:var(--font-mono);
+    font-size:11px;
+    padding:3px 8px;
+    border-radius:5px;
+    flex:0 0 auto;
+    font-weight:600;
+  }
+  .rule-row .rname{ font-family:var(--font-mono); font-size:12.5px; color:var(--text-muted); flex:0 0 auto; min-width:76px; }
+  .rule-row .rnote{ font-size:13.5px; color:var(--text-muted); }
+  .rule-row.top .rnote{ color:var(--text); }
+  .rule-row .governing{
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--risk-2);
+    margin-left:auto;
+    flex:0 0 auto;
+  }
+
+  .tag-questions{
+    margin-top:24px;
+    padding:16px 18px;
+    background:var(--panel-raised);
+    border:1px solid var(--hairline);
+    border-radius:10px;
+  }
+  .tag-questions p{ margin:0 0 10px; font-size:13px; color:var(--text-muted); }
+  .tag-questions label{
+    display:flex; align-items:center; gap:8px;
+    font-size:13.5px; margin-bottom:8px; cursor:pointer;
+  }
+  .tag-note{ font-size:12.5px; color:var(--risk-2); margin-top:8px; display:none; }
+
+  .disclaimer{
+    margin-top:30px;
+    font-size:12.5px;
+    color:var(--text-faint);
+    border-left:2px solid var(--hairline);
+    padding-left:14px;
+  }
+
+  .result-actions{
+    display:flex;
+    gap:12px;
+    margin-top:26px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    border-radius:8px;
+    padding:11px 18px;
+    font-size:13.5px;
+    font-weight:500;
+    border:1px solid var(--text-faint);
+    background:transparent;
+    color:var(--text);
+  }
+  .btn:hover{ border-color:var(--risk-2); color:var(--risk-2); }
+  .btn.primary{ background:var(--text); color:var(--ink); border-color:var(--text); }
+  .btn.primary:hover{ opacity:.9; color:var(--ink); border-color:var(--text); }
+
+  /* ---------- Reference ---------- */
+  .reference{ display:none; }
+  .reference.active{ display:block; }
+  .ref-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .ref-table th{
+    text-align:left; font-family:var(--font-mono); font-size:10.5px;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint);
+    padding:8px 10px; border-bottom:1px solid var(--hairline);
+  }
+  .ref-table td{ padding:10px; border-bottom:1px solid var(--hairline); vertical-align:top; color:var(--text-muted); }
+  .ref-table td.rn{ font-family:var(--font-mono); color:var(--text); white-space:nowrap; }
+  .ref-table td.cl{ font-family:var(--font-mono); white-space:nowrap; }
+  .ref-section-title{ font-family:var(--font-display); font-size:19px; margin:26px 0 10px; font-weight:600; }
+  .ref-section-title:first-child{ margin-top:0; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="masthead">
+    <div class="brand">
+      <span class="eyebrow">Annex VIII decision support</span>
+      <h1>EU Device Classifier</h1>
+    </div>
+    <nav>
+      <button onclick="showLanding()">Home</button>
+      <button onclick="showReference('MDR')">MDR rules</button>
+      <button onclick="showReference('IVDR')">IVDR rules</button>
+    </nav>
+  </div>
+
+  <!-- ===================== LANDING ===================== -->
+  <div id="landing">
+    <p class="intro">Two related but separate EU regulations, two separate outputs. Pick the one that matches your product — <strong>general medical devices</strong> go through the MDR's 22 rules to land on Class I / IIa / IIb / III; <strong>in vitro diagnostics</strong> go through the IVDR's 7 rules to land on Class A / B / C / D.</p>
+
+    <div class="picker">
+      <div class="frame-card">
+        <span class="tag">Regulation (EU) 2017/745</span>
+        <h2>EU MDR</h2>
+        <p>General medical devices — instruments, implants, active equipment, software. Annex VIII, 22 classification rules across non‑invasive, invasive, active and special‑purpose devices.</p>
+        <div class="mini-ladder">
+          <span style="background:var(--risk-1)"></span>
+          <span style="background:var(--risk-2)"></span>
+          <span style="background:var(--risk-3)"></span>
+          <span style="background:var(--risk-4)"></span>
+        </div>
+        <button class="go" onclick="startWizard('MDR')">Classify a device →</button>
+      </div>
+      <div class="frame-card">
+        <span class="tag">Regulation (EU) 2017/746</span>
+        <h2>EU IVDR</h2>
+        <p>In vitro diagnostics — test kits, reagents, analysers, calibrators, companion diagnostics. Annex VIII, 7 classification rules driven by individual and public‑health risk.</p>
+        <div class="mini-ladder">
+          <span style="background:var(--risk-1)"></span>
+          <span style="background:var(--risk-2)"></span>
+          <span style="background:var(--risk-3)"></span>
+          <span style="background:var(--risk-4)"></span>
+        </div>
+        <button class="go" onclick="startWizard('IVDR')">Classify a device →</button>
+      </div>
+    </div>
+
+    <p class="rules-note">Both frameworks work the same way underneath: you don't stop at the first rule that fits. You check every rule that could apply, and the <strong>highest resulting class wins</strong>. This tool asks one question at a time, quietly checks every relevant rule in the background, and shows you which one ends up governing the result — this is a decision‑support aid, not a substitute for a Notified Body or regulatory affairs professional.</p>
+  </div>
+
+  <!-- ===================== WIZARD ===================== -->
+  <div class="wizard" id="wizard">
+    <div class="rail">
+      <div class="step-count" id="stepCount">Question 1</div>
+      <div class="ladder" id="ladder"></div>
+      <div class="rules-so-far" id="rulesSoFar"></div>
+    </div>
+    <div class="qcard">
+      <div class="rule-tag" id="ruleTag"></div>
+      <p class="qtext" id="qtext"></p>
+      <div class="options" id="options"></div>
+      <div class="qcard-foot">
+        <button class="back-link" onclick="goBack()">← Back</button>
+        <button class="switch-link" onclick="showLanding()">Switch framework</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== RESULT ===================== -->
+  <div class="result" id="result">
+    <div class="stamp-wrap">
+      <div class="stamp" id="stamp">
+        <span class="cls" id="stampCls"></span>
+        <span class="fw" id="stampFw"></span>
+      </div>
+      <div class="result-summary">
+        <div class="verdict-label">Governing classification</div>
+        <h2 id="verdictTitle"></h2>
+        <p class="lede" id="verdictLede"></p>
+      </div>
+    </div>
+
+    <div class="matched-rules">
+      <h3>Rules applied</h3>
+      <div id="ruleList"></div>
+    </div>
+
+    <div class="tag-questions" id="tagQuestions" style="display:none;">
+      <p>Class I has three special sub‑types that still require Notified Body involvement. Check any that apply:</p>
+      <label><input type="checkbox" onchange="updateTags()" id="tagIs"> Supplied sterile (Class Is)</label>
+      <label><input type="checkbox" onchange="updateTags()" id="tagIm"> Has a measuring function (Class Im)</label>
+      <label><input type="checkbox" onchange="updateTags()" id="tagIr"> Reusable surgical instrument (Class Ir)</label>
+      <div class="tag-note" id="tagNote">→ A Notified Body is required for this device despite the Class I base classification.</div>
+    </div>
+
+    <p class="disclaimer">This tool applies the Annex VIII rule logic described above to give a defensible starting classification and cite the specific rule(s) behind it. It doesn't replace a documented classification rationale, MDCG guidance review, or your Notified Body's own assessment — treat the result as a well‑informed first pass, not a final regulatory determination.</p>
+
+    <div class="result-actions">
+      <button class="btn primary" onclick="restart()">Classify another device</button>
+      <button class="btn" onclick="showLanding()">Switch framework</button>
+    </div>
+  </div>
+
+  <!-- ===================== REFERENCE ===================== -->
+  <div class="reference" id="reference">
+    <div id="refContent"></div>
+    <div class="result-actions">
+      <button class="btn" onclick="showLanding()">← Back home</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================================
+   DATA MODEL
+   Each node graph is a small state machine. Every node can push one or more
+   "candidates" ({cls, rule, note}) into the running list. At the end, the
+   HIGHEST candidate class wins — but every matched rule is still shown,
+   mirroring the real Annex VIII implementing-rule requirement that all
+   applicable rules must be checked and the strictest one governs.
+   ========================================================================= */
+
+const ORDER = { MDR: ['I','IIa','IIb','III'], IVDR: ['A','B','C','D'] };
+const RUNG_LABEL = {
+  MDR:  ['Class I','Class IIa','Class IIb','Class III'],
+  IVDR: ['Class A','Class B','Class C','Class D']
+};
+
+function push(ctx, cls, rule, note){ ctx.candidates.push({cls, rule, note}); }
+
+/* ---------------------------- IVDR NODES ---------------------------- */
+const IVDR_NODES = {
+  start: {
+    next: () => 'q1'
+  },
+  q1: {
+    rule:'Rule 1 — Life-threatening transmissible agents',
+    text:'Is the device intended to detect a transmissible agent in blood, tissue, cells or organs — to assess donor suitability, to detect a life‑threatening highly transmissible disease, or to determine infectious load where this is critical for patient management? (e.g. HIV, Hepatitis B/C, HTLV, Ebola, blood‑donation screening)',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'D','Rule 1','Life‑threatening transmissible agent / blood‑and‑tissue‑supply screening'); },
+    next:()=> 'q2'
+  },
+  q2: {
+    rule:'Rule 2 — Blood grouping & tissue typing',
+    text:'Is the device intended for blood grouping or tissue typing, to ensure immunological compatibility for transfusion, transplantation or cell administration?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'q2b' : 'q3'
+  },
+  q2b:{
+    rule:'Rule 2 — Blood grouping & tissue typing',
+    text:'Does it test specifically for the ABO system, the Rhesus system (D/C/E/c/e), Kell, Kidd, or Duffy markers?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'D','Rule 2','Blood grouping — ABO / Rhesus / Kell / Kidd / Duffy markers');
+      else push(ctx,'C','Rule 2','Blood grouping or tissue typing — other markers');
+    },
+    next:()=> 'q3'
+  },
+  q3:{
+    rule:'Rule 3 — High individual‑risk diagnostics',
+    text:'Does the device do any of the following: detect a sexually transmitted agent; detect an infectious agent that could harm an unborn child; detect an agent likely to be fatal if untreated, or with high risk of spreading if misdiagnosed; screen or select patients for a specific therapy (a companion diagnostic, e.g. for cancer treatment); monitor levels of a medicine, substance or biomarker where the result directly affects patient management; or otherwise help manage a patient with a life‑threatening disease?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'C','Rule 3','High individual‑risk diagnostic — infection, companion diagnostic, disease management or monitoring'); },
+    next:()=> 'q4'
+  },
+  q4:{
+    rule:'Rule 4 — Self‑testing',
+    text:'Is the device intended for self‑testing — used directly by a layperson at home, without a healthcare professional?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'q4b' : 'q5'
+  },
+  q4b:{
+    rule:'Rule 4 — Self‑testing',
+    text:'Is it one of the commonly designated Class B self‑tests: pregnancy, fertility, cholesterol, blood‑glucose self‑monitoring, or a general urine dipstick?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'B','Rule 4','Designated Class B self‑test');
+      else push(ctx,'C','Rule 4','Self‑test device, default classification');
+    },
+    next:()=> 'q5'
+  },
+  q5:{
+    rule:'Rule 5 / 7 — Lab equipment & specimen receptacles',
+    text:'Is the device general laboratory equipment or an instrument (analyser, centrifuge, pipette, plate reader) — or a specimen receptacle (collection tube, swab, container) — that does not itself generate a diagnostic result?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'A','Rule 5 / 7','General laboratory equipment or specimen receptacle'); },
+    next:()=> 'q6'
+  },
+  q6:{
+    rule:'Rule 6 — Control materials & calibrators',
+    text:'Is the device a control material or calibrator intended to verify or calibrate a specific IVD test?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'q6b' : 'RESULT'
+  },
+  q6b:{
+    rule:'Rule 6 — Control materials & calibrators',
+    text:'Controls and calibrators take the same class as the specific test they support. Do you know that test\u2019s class?',
+    type:'choice',
+    options:[{v:'known', label:'Yes — I\u2019ll apply that test\u2019s class directly'},{v:'unknown', label:'No — use the default (Class B)'}],
+    effect:(v,ctx)=>{
+      if(v==='unknown') push(ctx,'B','Rule 6','Control / calibrator, default classification');
+      else push(ctx,'B','Rule 6','Control / calibrator — classify at the same class as the device it supports (apply that class instead of this default)');
+    },
+    next:()=> 'RESULT'
+  }
+};
+
+function finalizeIVDR(ctx){
+  if(ctx.candidates.length===0) push(ctx,'B','Default','No specific higher‑risk rule matched');
+}
+
+/* ---------------------------- MDR NODES ---------------------------- */
+const MDR_NODES = {
+  start:{ next:()=> 'm1' },
+
+  m1:{
+    rule:'Scoping',
+    text:'Is the product a standalone software application, rather than physical hardware? (If it\u2019s embedded control software for a physical device, answer No — it will be classified together with that device.)',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'sw1' : 'm2'
+  },
+
+  /* ---- software sub-tree (Rule 11) ---- */
+  sw1:{
+    rule:'Rule 11 — Software',
+    text:'Could an incorrect output from the software cause death, or an irreversible deterioration of a patient\u2019s health?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 11','Software decisions with potential for death or irreversible harm'); },
+    next:(v)=> v==='yes' ? 'RESULT' : 'sw2'
+  },
+  sw2:{
+    rule:'Rule 11 — Software',
+    text:'Could an incorrect output cause a serious deterioration of health, or require a surgical or invasive intervention?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'IIb','Rule 11','Software decisions risking serious harm or requiring intervention'); },
+    next:(v)=> v==='yes' ? 'RESULT' : 'sw3'
+  },
+  sw3:{
+    rule:'Rule 11 — Software',
+    text:'Is the software intended to provide information used for diagnostic or therapeutic decisions, or to monitor physiological processes?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='no') push(ctx,'I','Rule 11','Other software — no diagnostic, therapeutic or monitoring function'); },
+    next:(v)=> v==='yes' ? 'sw4' : 'RESULT'
+  },
+  sw4:{
+    rule:'Rule 11 — Software',
+    text:'Does it monitor VITAL physiological parameters, where the nature of variation could result in immediate danger to the patient?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'IIb','Rule 11','Vital‑parameter monitoring with potential for immediate danger');
+      else push(ctx,'IIa','Rule 11','Diagnostic/therapeutic information, or non‑vital monitoring');
+    },
+    next:()=> 'RESULT'
+  },
+
+  /* ---- special / catch-all rules, checked before the main pathway ---- */
+  m2:{
+    rule:'Rule 14 — Medicinal substances',
+    text:'Does the device incorporate, or consist of, a human blood derivative — or a medicinal substance with an action ancillary to the device\u2019s own action (e.g. a heparin‑coated catheter, a drug‑eluting stent)?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 14','Incorporates a blood derivative or an ancillary medicinal substance'); },
+    next:()=> 'm3'
+  },
+  m3:{
+    rule:'Rule 18 — Human/animal tissue',
+    text:'Is the device manufactured utilising tissues, cells, or their derivatives, of human or animal origin (or non‑viable derivatives) — other than a device that only contacts intact skin?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 18','Manufactured using human or animal‑origin tissue or cells'); },
+    next:()=> 'm4'
+  },
+  m4:{
+    rule:'Rule 15 — Contraception & STI prevention',
+    text:'Is the device intended for contraception, or for the prevention of sexually transmitted disease?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm4b' : 'm5'
+  },
+  m4b:{
+    rule:'Rule 15 — Contraception & STI prevention',
+    text:'Is it implantable, or intended for long‑term surgically‑invasive use?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'III','Rule 15','Implantable / long‑term contraceptive or STI‑prevention device');
+      else push(ctx,'IIb','Rule 15','Contraceptive or STI‑prevention device');
+    },
+    next:()=> 'm5'
+  },
+  m5:{
+    rule:'Rule 19 — Nanomaterials',
+    text:'Does the device incorporate, or consist of, nanomaterial?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm5b' : 'm6'
+  },
+  m5b:{
+    rule:'Rule 19 — Nanomaterials',
+    text:'What is the potential for internal exposure to the nanomaterial?',
+    type:'choice',
+    options:[{v:'neg',label:'Negligible'},{v:'low',label:'Low'},{v:'hm',label:'High or medium'}],
+    effect:(v,ctx)=>{
+      const map={neg:'IIa', low:'IIb', hm:'III'};
+      push(ctx, map[v], 'Rule 19', 'Nanomaterial‑containing device — '+({neg:'negligible',low:'low',hm:'high/medium'}[v])+' internal exposure');
+    },
+    next:()=> 'm6'
+  },
+  m6:{
+    rule:'Rule 21 — Substance‑based devices',
+    text:'Is the device a substance, or combination of substances, intended to be introduced into the body via a body orifice, or applied to the skin, and absorbed by or locally dispersed in the body?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm6b' : 'm7'
+  },
+  m6b:{
+    rule:'Rule 21 — Substance‑based devices',
+    text:'How is it used?',
+    type:'choice',
+    options:[
+      {v:'skin',label:'Applied to the skin only'},
+      {v:'orifice',label:'Introduced via a body orifice, not absorbed'},
+      {v:'absorbed',label:'Absorbed or locally dispersed in the body'}
+    ],
+    effect:(v,ctx)=>{
+      const map={skin:'IIa', orifice:'IIb', absorbed:'III'};
+      const label={skin:'applied to skin only', orifice:'introduced via body orifice, not absorbed', absorbed:'absorbed or locally dispersed in the body'};
+      push(ctx, map[v], 'Rule 21', 'Substance‑based device — '+label[v]);
+    },
+    next:()=> 'm7'
+  },
+  m7:{
+    rule:'Rule 20 — Inhalation administration',
+    text:'Is the device a (non‑surgical) invasive device intended to administer a medicinal product by inhalation (e.g. an inhaler or nebulizer)?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm7b' : 'm8'
+  },
+  m7b:{
+    rule:'Rule 20 — Inhalation administration',
+    text:'Does it have a critical impact on the performance of the medicinal product, or is it intended to treat a life‑threatening condition?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'III','Rule 20','Inhalation device with critical impact on drug performance, or for life‑threatening conditions');
+      else push(ctx,'IIb','Rule 20','Inhalation administration device');
+    },
+    next:()=> 'm8'
+  },
+  m8:{
+    rule:'Rule 22 — Annex XVI products',
+    text:'Is this an Annex XVI product without an intended medical purpose — e.g. non‑corrective (cosmetic) contact lenses, aesthetic dermal fillers or implants, tattoo/micropigmentation equipment, skin‑resurfacing equipment, or brain‑stimulation equipment using electrical current or magnetic fields?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'IIa','Rule 22','Annex XVI non‑medical‑purpose product — floor classification; several sub‑types (e.g. injectable fillers, invasive brain stimulation) reach Class III under the specific Annex XVI implementing rules'); },
+    next:()=> 'm9'
+  },
+  m9:{
+    rule:'Rule 16 — Contact lens care',
+    text:'Is the device intended specifically to disinfect, clean, rinse or hydrate contact lenses?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'IIb','Rule 16','Contact‑lens care product'); },
+    next:()=> 'm10'
+  },
+  m10:{
+    rule:'Rule 4 — Device disinfection',
+    text:'Is the device intended to disinfect or sterilise other medical devices?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm10b' : 'm11'
+  },
+  m10b:{
+    rule:'Rule 4 — Device disinfection',
+    text:'Is it a disinfecting solution or washer‑disinfector used specifically as the final step in processing invasive devices?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'IIb','Rule 4','End‑stage disinfection of invasive devices');
+      else push(ctx,'IIa','Rule 4','Device disinfection or sterilisation product');
+    },
+    next:()=> 'm11'
+  },
+  m11:{
+    rule:'Rule 17 — X-ray imaging',
+    text:'Is the device specifically intended to record diagnostic images generated by X‑ray radiation?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'IIa','Rule 17','X‑ray diagnostic image recording device'); },
+    next:()=> 'm12'
+  },
+
+  /* ---- invasiveness pathway (Rules 1-8) ---- */
+  m12:{
+    rule:'Invasiveness',
+    text:'Does the device penetrate the body at all, through a body surface or an orifice — i.e. is it invasive in any way?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm14' : 'm13'
+  },
+  m13:{
+    rule:'Rule 2 — Channelling body fluids',
+    text:'Is the device intended to channel or store blood, body liquids, cells, tissues or gases, for eventual infusion, administration, or introduction into the body?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm13b' : 'm13c'
+  },
+  m13b:{
+    rule:'Rule 2 — Channelling body fluids',
+    text:'Is it a blood bag?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'IIb','Rule 2','Blood bag');
+      else push(ctx,'IIa','Rule 2','Channelling / storage device for body fluids');
+    },
+    next:()=> 'm16'
+  },
+  m13c:{
+    rule:'Rule 3 — Modifying body fluids',
+    text:'Does the device modify the biological or chemical composition of human tissue, cells, blood or other body liquids (e.g. dialysis, apheresis, blood‑product processing)?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='no') push(ctx,'I','Rule 1','Default — non‑invasive device with no special rule applying'); },
+    next:(v)=> v==='yes' ? 'm13d' : 'm16'
+  },
+  m13d:{
+    rule:'Rule 3 — Modifying body fluids',
+    text:'Is it used in vitro with human embryos, before implantation or administration into the body?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 3','In‑vitro treatment of human embryos'); },
+    next:(v)=> v==='yes' ? 'm16' : 'm13e'
+  },
+  m13e:{
+    rule:'Rule 3 — Modifying body fluids',
+    text:'Does the treatment consist only of filtration, centrifugation, or the exchange of gas or heat?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'IIa','Rule 3','Filtration, centrifugation, or gas/heat exchange');
+      else push(ctx,'IIb','Rule 3','Other biological/chemical composition modification');
+    },
+    next:()=> 'm16'
+  },
+  m14:{
+    rule:'Invasiveness',
+    text:'How does the device enter the body?',
+    type:'choice',
+    options:[
+      {v:'orifice', label:'Through a natural body orifice only (non‑surgical)'},
+      {v:'surgical', label:'Surgically invasive, or implantable'}
+    ],
+    next:(v)=> v==='orifice' ? 'm14o' : 'm15'
+  },
+  m14o:{
+    rule:'Rule 5 — Body‑orifice devices',
+    text:'What is the intended duration of continuous use?',
+    type:'choice',
+    options:[
+      {v:'transient', label:'Transient (under 60 minutes)'},
+      {v:'short', label:'Short‑term (60 minutes to 30 days)'},
+      {v:'long', label:'Long‑term (more than 30 days)'}
+    ],
+    effect:(v,ctx)=>{
+      if(v==='transient') push(ctx,'I','Rule 5','Transient body‑orifice device');
+      if(v==='long') push(ctx,'IIb','Rule 5','Long‑term body‑orifice device');
+    },
+    next:(v)=> v==='short' ? 'm14o_b' : 'm16'
+  },
+  m14o_b:{
+    rule:'Rule 5 — Body‑orifice devices',
+    text:'Is it used only in the oral cavity as far as the pharynx, in the ear canal up to the ear drum, or in the nasal cavity — and not liable to be absorbed by the mucous membrane?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'I','Rule 5','Short‑term device confined to oral/ear/nasal cavity, not absorbed');
+      else push(ctx,'IIa','Rule 5','Short‑term body‑orifice device');
+    },
+    next:()=> 'm16'
+  },
+  m15:{
+    rule:'Rule 8 — Implants & long‑term surgical devices',
+    text:'Is the device implantable, OR is it surgically invasive and intended for long‑term use (more than 30 days)?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm15y_1' : 'm15n_1'
+  },
+  m15n_1:{
+    rule:'Rule 6 / 7 — Transient & short‑term surgically invasive',
+    text:'Is the device in direct contact with the heart, or with the central nervous system?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 6/7','Direct contact with the heart or central nervous system'); },
+    next:(v)=> v==='yes' ? 'm16' : 'm15n_2'
+  },
+  m15n_2:{
+    rule:'Rule 6 / 7 — Transient & short‑term surgically invasive',
+    text:'Is it in direct contact with the central circulatory system, does it involve controlled exposure to ionising radiation, or does it have a biological effect (or, for short‑term devices, get absorbed)?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'IIb','Rule 6/7','Central‑circulatory contact, ionising radiation, or biological effect/absorption');
+      else push(ctx,'IIa','Rule 6/7','Standard transient or short‑term surgically‑invasive device');
+    },
+    next:()=> 'm16'
+  },
+  m15y_1:{
+    rule:'Rule 8 — Implants & long‑term surgical devices',
+    text:'Is the device placed in the teeth?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'IIa','Rule 8','Dental implant or device'); },
+    next:(v)=> v==='yes' ? 'm16' : 'm15y_2'
+  },
+  m15y_2:{
+    rule:'Rule 8 — Implants & long‑term surgical devices',
+    text:'Is it in direct contact with the heart, the central circulatory system, or the central nervous system?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 8','Direct contact with heart, central circulatory system, or CNS'); },
+    next:(v)=> v==='yes' ? 'm16' : 'm15y_3'
+  },
+  m15y_3:{
+    rule:'Rule 8 — Implants & long‑term surgical devices',
+    text:'Does it have a biological effect, is it wholly or mainly absorbed, or does it undergo a chemical change in the body?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 8','Biological effect, absorption, or chemical change in the body'); },
+    next:(v)=> v==='yes' ? 'm16' : 'm15y_4'
+  },
+  m15y_4:{
+    rule:'Rule 8 — Implants & long‑term surgical devices',
+    text:'Is it a breast implant, or a surgical mesh?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'III','Rule 8','Breast implant or surgical mesh');
+      else push(ctx,'IIb','Rule 8','Implantable / long‑term surgically‑invasive device (default, incl. joint replacements)');
+    },
+    next:()=> 'm16'
+  },
+
+  /* ---- active-device pathway (Rules 9, 10, 12, 13) ---- */
+  m16:{
+    rule:'Active devices',
+    text:'Does the device depend on a source of energy other than that generated directly by the human body or by gravity — i.e. is it an active/powered device?',
+    type:'yesno',
+    effect:(v,ctx)=>{ ctx.flags.isActive = (v==='yes'); },
+    next:(v)=> v==='yes' ? 'm17' : 'RESULT'
+  },
+  m17:{
+    rule:'Rule 9 — Active therapeutic devices',
+    text:'Is it intended to administer or exchange energy to or from the body for a therapeutic purpose (e.g. physiotherapy, electrosurgery)?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm17b' : 'm18'
+  },
+  m17b:{
+    rule:'Rule 9 — Active therapeutic devices',
+    text:'Does it exchange energy in a way that could be potentially hazardous, given the nature, density and site of application of the energy (e.g. a defibrillator or electrosurgical unit)?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      ctx.flags.activeMatched = true;
+      if(v==='yes') push(ctx,'IIb','Rule 9','Potentially hazardous therapeutic energy exchange');
+      else push(ctx,'IIa','Rule 9','Non‑hazardous therapeutic energy exchange');
+    },
+    next:()=> 'm17c'
+  },
+  m17c:{
+    rule:'Rule 9 — Active therapeutic devices',
+    text:'Does it control, monitor, or directly influence the performance of an active therapeutic Class IIb device, or of an active implantable device?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.activeMatched = true; push(ctx,'III','Rule 9','Controls/monitors a critical active or implantable device'); } },
+    next:()=> 'm18'
+  },
+  m18:{
+    rule:'Rule 10 — Active diagnostic devices',
+    text:'Is it an active device intended for diagnosis or monitoring (e.g. imaging, physiological monitoring)?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm18b' : 'm19'
+  },
+  m18b:{
+    rule:'Rule 10 — Active diagnostic devices',
+    text:'Does it emit ionising radiation for diagnostic or therapeutic radiology, including interventional radiology?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.activeMatched = true; push(ctx,'IIb','Rule 10','Emits ionising radiation (diagnostic/interventional)'); } },
+    next:(v)=> v==='yes' ? 'm19' : 'm18c'
+  },
+  m18c:{
+    rule:'Rule 10 — Active diagnostic devices',
+    text:'Does it monitor VITAL physiological parameters, where the nature of variation could result in immediate danger to the patient (e.g. an ICU monitor)?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      ctx.flags.activeMatched = true;
+      if(v==='yes') push(ctx,'IIb','Rule 10','Vital‑parameter monitoring with potential for immediate danger');
+      else push(ctx,'IIa','Rule 10','Diagnostic/monitoring active device');
+    },
+    next:()=> 'm19'
+  },
+  m19:{
+    rule:'Rule 12 — Active substance administration',
+    text:'Is it an active device intended to administer and/or remove medicinal products, body liquids, or other substances to/from the body (e.g. an infusion pump)?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm19b' : 'RESULT'
+  },
+  m19b:{
+    rule:'Rule 12 — Active substance administration',
+    text:'Is this done in a potentially hazardous manner, given the substances involved, the body part concerned, and the mode of application?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      ctx.flags.activeMatched = true;
+      if(v==='yes') push(ctx,'IIb','Rule 12','Potentially hazardous substance administration/removal');
+      else push(ctx,'IIa','Rule 12','Substance administration/removal device');
+    },
+    next:()=> 'RESULT'
+  }
+};
+
+function finalizeMDR(ctx){
+  if(ctx.flags.isActive && !ctx.flags.activeMatched){
+    push(ctx,'I','Rule 13','Other active device — no more specific rule applies');
+  }
+  if(ctx.candidates.length===0) push(ctx,'I','Rule 1','Default — no specific rule applies');
+}
+
+/* =========================================================================
+   REFERENCE TABLES (static, for the "view all rules" pages)
+   ========================================================================= */
+const IVDR_REF = [
+  ['Rule 1','D','Detects a life‑threatening, highly transmissible agent; donor/blood/tissue‑supply screening (e.g. HIV, HBV, HCV, HTLV, Ebola).'],
+  ['Rule 2','C / D','Blood grouping or tissue typing. D for ABO, Rhesus, Kell, Kidd, Duffy; C for other markers.'],
+  ['Rule 3','C','Broad high‑individual‑risk category: STI detection, agents harmful to a fetus, fatal‑if‑untreated agents, companion diagnostics, disease‑management and therapeutic drug monitoring, cancer/therapy‑selection screening.'],
+  ['Rule 4','B / C','Self‑testing devices. C by default; B for Commission‑designated tests (pregnancy, fertility, cholesterol, glucose, urine dipstick).'],
+  ['Rule 5','A','General laboratory instruments and reagents without a specific IVD purpose.'],
+  ['Rule 6','B (or inherited)','Control materials with an assigned value, and calibrators — take the class of the device they support; B by default.'],
+  ['Rule 7','A','Specimen receptacles (collection tubes, swabs, containers).'],
+  ['Implementing rules','—','Multiple intended purposes → highest class applies. Multiple matching rules → highest class applies. Software driving/influencing a device → same class as that device; standalone software classified on its own intended purpose.']
+];
+
+const MDR_REF = [
+  ['Rule 1','I','Default classification for any non‑invasive device not covered by Rules 2–4.'],
+  ['Rule 2','IIa / IIb','Channelling/storing blood or body liquids for eventual administration. IIb specifically for blood bags.'],
+  ['Rule 3','IIa / IIb / III','Modifying the biological/chemical composition of tissue, cells, blood or body liquids. IIa for filtration/centrifugation/gas‑heat exchange; III for in‑vitro embryo treatment; IIb otherwise.'],
+  ['Rule 4','IIa / IIb','Disinfecting or sterilising devices, or cleaning/disinfecting/hydrating contact lenses (IIb).'],
+  ['Rule 5','I / IIa / IIb','Body‑orifice (non‑surgical) invasive devices, by duration: transient I, short‑term IIa (I if confined to oral/ear/nasal cavity and non‑absorbed), long‑term IIb.'],
+  ['Rule 6','IIa / IIb / III','Surgically invasive, transient use. IIb/III for heart, CNS, central circulatory contact, ionising radiation or biological effect.'],
+  ['Rule 7','IIa / IIb / III','Surgically invasive, short‑term use — same escalation logic as Rule 6, plus absorption.'],
+  ['Rule 8','IIa / IIb / III','Implantable or long‑term surgically invasive. IIa for dental; III for heart/CNS/central‑circulatory contact, biological effect, absorption, chemical change, breast implants and surgical mesh; IIb default (incl. joint replacements).'],
+  ['Rule 9','IIa / IIb / III','Active therapeutic energy‑exchange devices. IIb if potentially hazardous; III if controlling/monitoring a critical active or implantable device.'],
+  ['Rule 10','IIa / IIb','Active diagnostic/monitoring devices. IIb for ionising radiation or vital‑parameter monitoring with danger potential; IIa otherwise.'],
+  ['Rule 11','I / IIa / IIb / III','Software. III if wrong output could cause death/irreversible harm; IIb for serious harm/intervention or vital‑parameter monitoring; IIa for diagnostic/therapeutic info or non‑vital monitoring; I otherwise.'],
+  ['Rule 12','IIa / IIb','Active devices administering/removing medicinal products or substances. IIb if potentially hazardous.'],
+  ['Rule 13','I','Catch‑all for any other active device not covered by Rules 9–12.'],
+  ['Rule 14','III','Incorporates a human blood derivative or a medicinal substance with an ancillary action.'],
+  ['Rule 15','IIb / III','Contraception or STI prevention. III if implantable or long‑term invasive.'],
+  ['Rule 16','IIa / IIb','Disinfecting devices for other medical devices (IIa), or specifically for invasive‑device end‑stage processing (IIb).'],
+  ['Rule 17','IIa','Devices specifically recording diagnostic images from X‑ray radiation.'],
+  ['Rule 18','III','Manufactured using human or animal‑origin tissues/cells, except devices contacting only intact skin.'],
+  ['Rule 19','IIa / IIb / III','Devices incorporating nanomaterial, by potential for internal exposure: negligible IIa, low IIb, high/medium III.'],
+  ['Rule 20','IIb / III','Invasive inhalation devices administering medicinal products. III if critical impact on the drug or for life‑threatening conditions.'],
+  ['Rule 21','IIa / IIb / III','Substance‑based devices. IIa applied to skin only; IIb via body orifice, not absorbed; III if absorbed/locally dispersed.'],
+  ['Rule 22','IIa+','Annex XVI products without a medical purpose (cosmetic contact lenses, fillers, tattoo equipment, brain stimulation, etc.) — floor of IIa, several sub‑types reach III.']
+];
+
+/* =========================================================================
+   ENGINE
+   ========================================================================= */
+let state = { system:null, answers:[] };
+
+function nodesFor(sys){ return sys==='MDR' ? MDR_NODES : IVDR_NODES; }
+
+function recompute(){
+  const ctx = { candidates:[], flags:{} };
+  const nodes = nodesFor(state.system);
+  let id = 'start';
+  for(const ans of state.answers){
+    const node = nodes[id];
+    if(!node) break;
+    if(node.effect) node.effect(ans.value, ctx);
+    id = typeof node.next === 'function' ? node.next(ans.value, ctx) : node.next;
+  }
+  // Auto-advance through any routing node that has no question of its own
+  // (e.g. the initial 'start' node) — these just forward to the real next node.
+  let guard = 0;
+  while(id !== 'RESULT' && nodes[id] && !nodes[id].type){
+    const node = nodes[id];
+    if(node.effect) node.effect(undefined, ctx);
+    id = typeof node.next === 'function' ? node.next(undefined, ctx) : node.next;
+    guard++;
+    if(guard > 50) break; // safety valve against an accidental cycle
+  }
+  return { ctx, currentId:id };
+}
+
+function startWizard(sys){
+  state = { system:sys, answers:[] };
+  document.getElementById('landing').style.display='none';
+  document.getElementById('reference').classList.remove('active');
+  document.getElementById('result').classList.remove('active');
+  document.getElementById('wizard').classList.add('active');
+  buildLadder(sys);
+  render();
+}
+
+function restart(){ startWizard(state.system); }
+
+function showLanding(){
+  document.getElementById('landing').style.display='block';
+  document.getElementById('wizard').classList.remove('active');
+  document.getElementById('result').classList.remove('active');
+  document.getElementById('reference').classList.remove('active');
+}
+
+function showReference(sys){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('wizard').classList.remove('active');
+  document.getElementById('result').classList.remove('active');
+  const ref = document.getElementById('reference');
+  ref.classList.add('active');
+  const data = sys==='MDR' ? MDR_REF : IVDR_REF;
+  const title = sys==='MDR' ? 'EU MDR — Annex VIII, all 22 classification rules' : 'EU IVDR — Annex VIII, all 7 classification rules';
+  let html = '<h2 class="ref-section-title">'+title+'</h2><table class="ref-table"><thead><tr><th>Rule</th><th>Class</th><th>Summary</th></tr></thead><tbody>';
+  data.forEach(r=>{
+    html += '<tr><td class="rn">'+r[0]+'</td><td class="cl">'+r[1]+'</td><td>'+r[2]+'</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('refContent').innerHTML = html;
+}
+
+function buildLadder(sys){
+  const labels = RUNG_LABEL[sys];
+  const ladder = document.getElementById('ladder');
+  ladder.innerHTML='';
+  labels.forEach((label,i)=>{
+    const d=document.createElement('div');
+    d.className='rung';
+    d.setAttribute('data-c', i);
+    d.textContent = label;
+    ladder.appendChild(d);
+  });
+}
+
+function litLevel(){
+  const {ctx} = recompute();
+  const order = ORDER[state.system];
+  let max=-1;
+  ctx.candidates.forEach(c=>{ max = Math.max(max, order.indexOf(c.cls)); });
+  return {max, ctx};
+}
+
+function render(){
+  const {ctx, currentId} = recompute();
+  if(currentId==='RESULT'){
+    if(state.system==='MDR') finalizeMDR(ctx); else finalizeIVDR(ctx);
+    renderResult(ctx);
+    return;
+  }
+  document.getElementById('result').classList.remove('active');
+  document.getElementById('wizard').classList.add('active');
+
+  const node = nodesFor(state.system)[currentId];
+  document.getElementById('stepCount').textContent = 'Question ' + (state.answers.length+1);
+  document.getElementById('ruleTag').textContent = node.rule || '';
+  document.getElementById('qtext').textContent = node.text;
+
+  // light up the ladder based on candidates so far
+  const order = ORDER[state.system];
+  let max=-1;
+  ctx.candidates.forEach(c=>{ max = Math.max(max, order.indexOf(c.cls)); });
+  document.querySelectorAll('#ladder .rung').forEach((el)=>{
+    const idx = parseInt(el.getAttribute('data-c'),10);
+    el.classList.toggle('lit', idx===max);
+  });
+
+  const rulesSoFar = document.getElementById('rulesSoFar');
+  if(ctx.candidates.length){
+    rulesSoFar.innerHTML = '<b>'+ctx.candidates.length+'</b> rule'+(ctx.candidates.length===1?'':'s')+' matched so far';
+  } else {
+    rulesSoFar.textContent = 'No rule matched yet';
+  }
+
+  const opts = document.getElementById('options');
+  opts.innerHTML='';
+  const row = document.createElement('div');
+  row.className = node.type==='yesno' ? 'opt-row' : 'opt-row';
+  (node.options || [{v:'yes',label:'Yes'},{v:'no',label:'No'}]).forEach(o=>{
+    const b=document.createElement('button');
+    b.className = 'opt' + (node.type==='yesno' ? ' yn' : '');
+    b.textContent = o.label;
+    b.onclick = ()=> answer(currentId, o.v);
+    row.appendChild(b);
+  });
+  opts.appendChild(row);
+}
+
+function answer(nodeId, value){
+  state.answers.push({id:nodeId, value});
+  render();
+}
+
+function goBack(){
+  if(state.answers.length===0){ showLanding(); return; }
+  state.answers.pop();
+  render();
+}
+
+function classColorVar(sys, cls){
+  const idx = ORDER[sys].indexOf(cls);
+  return ['var(--risk-1)','var(--risk-2)','var(--risk-3)','var(--risk-4)'][idx];
+}
+
+const CLASS_BLURB = {
+  MDR: {
+    I:'Low risk. Self‑declared by the manufacturer — no Notified Body involvement, unless a sterile, measuring, or reusable‑surgical sub‑type applies.',
+    IIa:'Moderate risk. Requires Notified Body assessment of technical documentation.',
+    IIb:'Medium‑high risk. Requires Notified Body assessment, with deeper clinical evidence review.',
+    III:'Highest risk. Full Notified Body conformity assessment, including scrutiny procedures for certain devices.'
+  },
+  IVDR: {
+    A:'Low risk. Self‑declared by the manufacturer, unless supplied sterile.',
+    B:'Moderate risk. Full Notified Body technical documentation and QMS assessment.',
+    C:'High risk. Notified Body assessment including performance evaluation review.',
+    D:'Highest risk. Full assessment plus EU Reference Laboratory batch verification.'
+  }
+};
+
+function renderResult(ctx){
+  document.getElementById('wizard').classList.remove('active');
+  document.getElementById('result').classList.add('active');
+
+  const order = ORDER[state.system];
+  const sorted = [...ctx.candidates].sort((a,b)=> order.indexOf(b.cls)-order.indexOf(a.cls));
+  const top = sorted[0];
+  const color = classColorVar(state.system, top.cls);
+
+  const stamp = document.getElementById('stamp');
+  stamp.style.color = color;
+  document.getElementById('stampCls').textContent = top.cls;
+  document.getElementById('stampCls').style.color = color;
+  document.getElementById('stampFw').textContent = state.system;
+
+  document.getElementById('verdictTitle').textContent = 'Class ' + top.cls;
+  document.getElementById('verdictLede').textContent = (CLASS_BLURB[state.system][top.cls]) || '';
+
+  const list = document.getElementById('ruleList');
+  list.innerHTML='';
+  sorted.forEach((c,i)=>{
+    const row=document.createElement('div');
+    row.className = 'rule-row' + (i===0 ? ' top':'');
+    const badge=document.createElement('span');
+    badge.className='badge';
+    badge.textContent='Class '+c.cls;
+    badge.style.background = classColorVar(state.system,c.cls);
+    badge.style.color = '#10151c';
+    const rname=document.createElement('span'); rname.className='rname'; rname.textContent=c.rule;
+    const rnote=document.createElement('span'); rnote.className='rnote'; rnote.textContent=c.note;
+    row.appendChild(badge); row.appendChild(rname); row.appendChild(rnote);
+    if(i===0){ const g=document.createElement('span'); g.className='governing'; g.textContent='Governs'; row.appendChild(g); }
+    list.appendChild(row);
+  });
+
+  const tagBox = document.getElementById('tagQuestions');
+  if(state.system==='MDR' && top.cls==='I'){
+    tagBox.style.display='block';
+    document.getElementById('tagIs').checked=false;
+    document.getElementById('tagIm').checked=false;
+    document.getElementById('tagIr').checked=false;
+    document.getElementById('tagNote').style.display='none';
+  } else {
+    tagBox.style.display='none';
+  }
+}
+
+function updateTags(){
+  const any = document.getElementById('tagIs').checked || document.getElementById('tagIm').checked || document.getElementById('tagIr').checked;
+  document.getElementById('tagNote').style.display = any ? 'block' : 'none';
+}
+</script>
+</body>
+</html>
