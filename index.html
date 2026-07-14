@@ -710,9 +710,25 @@ const MDR_NODES = {
   },
   m3:{
     rule:'Rule 18 — Human/animal tissue',
-    text:'Is the device manufactured utilising tissues, cells, or their derivatives, of human or animal origin (or non‑viable derivatives) — other than a device that only contacts intact skin?',
+    text:'Is the device manufactured utilising tissues or cells of human origin, or their derivatives, that are non‑viable or rendered non‑viable?',
     type:'yesno',
-    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 18','Manufactured using human or animal‑origin tissue or cells'); },
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 18','Manufactured using non‑viable human‑origin tissue or cells (no intact‑skin exception for human‑origin material)'); },
+    next:(v)=> v==='yes' ? 'm4' : 'm3b'
+  },
+  m3b:{
+    rule:'Rule 18 — Human/animal tissue',
+    text:'Is it manufactured utilising tissues or cells of animal origin, or their derivatives, that are non‑viable or rendered non‑viable?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm3c' : 'm4'
+  },
+  m3c:{
+    rule:'Rule 18 — Human/animal tissue',
+    text:'Is the device intended to come into contact with intact skin only (no contact with mucous membrane, injured skin, or any deeper tissue)?',
+    type:'yesno',
+    effect:(v,ctx)=>{
+      if(v==='yes') push(ctx,'I','Rule 18','Animal‑origin tissue/cells, intact‑skin‑only contact — narrow exception applies');
+      else push(ctx,'III','Rule 18','Animal‑origin tissue or cells, contact beyond intact skin');
+    },
     next:()=> 'm4'
   },
   m4:{
@@ -750,23 +766,24 @@ const MDR_NODES = {
   },
   m6:{
     rule:'Rule 21 — Substance‑based devices',
-    text:'Is the device a substance, or combination of substances, intended to be introduced into the body via a body orifice, or applied to the skin, and absorbed by or locally dispersed in the body?',
+    text:'Is the device composed of a substance or combination of substances intended to be introduced into the body via a body orifice, or applied to the skin, and absorbed by or locally dispersed in the body?',
     type:'yesno',
     next:(v)=> v==='yes' ? 'm6b' : 'm7'
   },
   m6b:{
     rule:'Rule 21 — Substance‑based devices',
-    text:'How is it used?',
-    type:'choice',
-    options:[
-      {v:'skin',label:'Applied to the skin only'},
-      {v:'orifice',label:'Introduced via a body orifice, not absorbed'},
-      {v:'absorbed',label:'Absorbed or locally dispersed in the body'}
-    ],
+    text:'Is it (or its breakdown products) systemically absorbed by the body to achieve its intended purpose — or does it act in the stomach or lower gastrointestinal tract while being systemically absorbed?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 21','Systemically absorbed (or GI‑tract acting with systemic absorption) to achieve intended purpose'); },
+    next:(v)=> v==='yes' ? 'm7' : 'm6d'
+  },
+  m6d:{
+    rule:'Rule 21 — Substance‑based devices',
+    text:'Is it applied to the skin, or to the nasal or oral cavity as far as the pharynx, achieving its intended purpose locally there (not absorbed)?',
+    type:'yesno',
     effect:(v,ctx)=>{
-      const map={skin:'IIa', orifice:'IIb', absorbed:'III'};
-      const label={skin:'applied to skin only', orifice:'introduced via body orifice, not absorbed', absorbed:'absorbed or locally dispersed in the body'};
-      push(ctx, map[v], 'Rule 21', 'Substance‑based device — '+label[v]);
+      if(v==='yes') push(ctx,'IIa','Rule 21','Local action on skin, or nasal/oral cavity as far as the pharynx');
+      else push(ctx,'IIb','Rule 21','Substance‑based device — default (other route/mechanism)');
     },
     next:()=> 'm7'
   },
@@ -778,19 +795,19 @@ const MDR_NODES = {
   },
   m7b:{
     rule:'Rule 20 — Inhalation administration',
-    text:'Does it have a critical impact on the performance of the medicinal product, or is it intended to treat a life‑threatening condition?',
+    text:'Does its mode of action have an essential impact on the efficacy and safety of the administered medicinal product, or is it intended to treat a life‑threatening condition?',
     type:'yesno',
     effect:(v,ctx)=>{
-      if(v==='yes') push(ctx,'III','Rule 20','Inhalation device with critical impact on drug performance, or for life‑threatening conditions');
-      else push(ctx,'IIb','Rule 20','Inhalation administration device');
+      if(v==='yes') push(ctx,'IIb','Rule 20','Essential impact on drug efficacy/safety, or for life‑threatening conditions');
+      else push(ctx,'IIa','Rule 20','Inhalation administration device (default)');
     },
     next:()=> 'm8'
   },
   m8:{
-    rule:'Rule 22 — Annex XVI products',
-    text:'Is this an Annex XVI product without an intended medical purpose — e.g. non‑corrective (cosmetic) contact lenses, aesthetic dermal fillers or implants, tattoo/micropigmentation equipment, skin‑resurfacing equipment, or brain‑stimulation equipment using electrical current or magnetic fields?',
+    rule:'Annex XVI (Reg. (EU) 2022/2346) — not one of the 22 classification rules',
+    text:'Is this an Annex XVI product without an intended medical purpose — e.g. non‑corrective (cosmetic) contact lenses, aesthetic dermal fillers or implants, liposuction/lipolysis equipment, high‑intensity light/laser skin‑or‑tattoo‑removal equipment, or brain‑stimulation equipment using electrical current or magnetic fields?',
     type:'yesno',
-    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'IIa','Rule 22','Annex XVI non‑medical‑purpose product — floor classification; several sub‑types (e.g. injectable fillers, invasive brain stimulation) reach Class III under the specific Annex XVI implementing rules'); },
+    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'IIa','Annex XVI (Reg. 2022/2346)','Non‑medical‑purpose product classified under the Annex XVI common specifications, using the same Rules 1–22 as if it had a medical purpose — floor shown here; the specific sub‑type (fillers, brain stimulation, etc.) often reaches Class III. This is separate legislation, not one of the 22 MDR rules.'); },
     next:()=> 'm9'
   },
   m9:{
@@ -801,18 +818,18 @@ const MDR_NODES = {
     next:()=> 'm10'
   },
   m10:{
-    rule:'Rule 4 — Device disinfection',
+    rule:'Rule 16 — Device disinfection',
     text:'Is the device intended to disinfect or sterilise other medical devices?',
     type:'yesno',
     next:(v)=> v==='yes' ? 'm10b' : 'm11'
   },
   m10b:{
-    rule:'Rule 4 — Device disinfection',
-    text:'Is it a disinfecting solution or washer‑disinfector used specifically as the final step in processing invasive devices?',
+    rule:'Rule 16 — Device disinfection',
+    text:'Is it specifically intended for the disinfection of invasive devices, or is it a washer‑disinfector/sterilisation step used as the end point of reprocessing?',
     type:'yesno',
     effect:(v,ctx)=>{
-      if(v==='yes') push(ctx,'IIb','Rule 4','End‑stage disinfection of invasive devices');
-      else push(ctx,'IIa','Rule 4','Device disinfection or sterilisation product');
+      if(v==='yes') push(ctx,'IIb','Rule 16','End‑stage disinfection/sterilisation of invasive devices');
+      else push(ctx,'IIa','Rule 16','Device disinfection or sterilisation product (default)');
     },
     next:()=> 'm11'
   },
@@ -829,36 +846,67 @@ const MDR_NODES = {
     rule:'Invasiveness',
     text:'Does the device penetrate the body at all, through a body surface or an orifice — i.e. is it invasive in any way?',
     type:'yesno',
+    effect:(v,ctx)=>{ if(v==='no') ctx.flags.reachedNonInvasive = true; },
     next:(v)=> v==='yes' ? 'm14' : 'm13'
   },
   m13:{
     rule:'Rule 2 — Channelling body fluids',
     text:'Is the device intended to channel or store blood, body liquids, cells, tissues or gases, for eventual infusion, administration, or introduction into the body?',
     type:'yesno',
-    next:(v)=> v==='yes' ? 'm13b' : 'm13c'
+    next:(v)=> v==='yes' ? 'm13b' : 'm13w'
   },
   m13b:{
     rule:'Rule 2 — Channelling body fluids',
-    text:'Is it a blood bag?',
-    type:'yesno',
+    text:'How is it used?',
+    type:'choice',
+    options:[
+      {v:'bag',label:'It is a blood bag'},
+      {v:'connected',label:'Connected to an active device that is itself Class IIa or higher'},
+      {v:'plain',label:'Neither of the above — simple channelling/storage'}
+    ],
     effect:(v,ctx)=>{
-      if(v==='yes') push(ctx,'IIb','Rule 2','Blood bag');
+      ctx.flags.nonInvasiveMatched = true;
+      if(v==='bag') push(ctx,'IIb','Rule 2','Blood bag');
+      else if(v==='connected') push(ctx,'IIb','Rule 2','Channelling/storage device connected to a Class IIa+ active device');
       else push(ctx,'IIa','Rule 2','Channelling / storage device for body fluids');
     },
-    next:()=> 'm16'
+    next:()=> 'm13w'
+  },
+  m13w:{
+    rule:'Rule 4 — Injured skin or mucous membrane',
+    text:'Does the device come into contact with injured skin or a mucous membrane (e.g. a wound, ulcer, burn, or damaged mucosa)?',
+    type:'yesno',
+    next:(v)=> v==='yes' ? 'm13w_b' : 'm13c'
+  },
+  m13w_b:{
+    rule:'Rule 4 — Injured skin or mucous membrane',
+    text:'What is its principal intended use on that injured skin/mucous membrane?',
+    type:'choice',
+    options:[
+      {v:'barrier',label:'Mechanical barrier, compression, or absorbing exudate'},
+      {v:'secondary',label:'Wounds that have breached the dermis/mucous membrane, healing only by secondary intent'},
+      {v:'microenv',label:'Managing the wound micro‑environment'},
+      {v:'other',label:'Other / general contact with injured skin or mucosa'}
+    ],
+    effect:(v,ctx)=>{
+      ctx.flags.nonInvasiveMatched = true;
+      const map={barrier:'I', secondary:'IIb', microenv:'IIa', other:'IIa'};
+      const label={barrier:'mechanical barrier / compression / exudate absorption', secondary:'wounds breaching the dermis or mucous membrane, healing by secondary intent', microenv:'managing the wound micro‑environment', other:'general contact with injured skin or mucous membrane'};
+      push(ctx, map[v], 'Rule 4', 'Injured‑skin/mucous‑membrane device — '+label[v]);
+    },
+    next:()=> 'm13c'
   },
   m13c:{
     rule:'Rule 3 — Modifying body fluids',
     text:'Does the device modify the biological or chemical composition of human tissue, cells, blood or other body liquids (e.g. dialysis, apheresis, blood‑product processing)?',
     type:'yesno',
-    effect:(v,ctx)=>{ if(v==='no') push(ctx,'I','Rule 1','Default — non‑invasive device with no special rule applying'); },
     next:(v)=> v==='yes' ? 'm13d' : 'm16'
   },
   m13d:{
     rule:'Rule 3 — Modifying body fluids',
-    text:'Is it used in vitro with human embryos, before implantation or administration into the body?',
+    text:'Is it used in vitro with human embryos before implantation or administration into the body, or is it an organ/tissue/cell storage or perfusion solution?',
     type:'yesno',
-    effect:(v,ctx)=>{ if(v==='yes') push(ctx,'III','Rule 3','In‑vitro treatment of human embryos'); },
+    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.nonInvasiveMatched = true; push(ctx,'III','Rule 3','In‑vitro embryo treatment, or organ/tissue/cell storage or perfusion solution'); } },
     next:(v)=> v==='yes' ? 'm16' : 'm13e'
   },
   m13e:{
@@ -866,6 +914,7 @@ const MDR_NODES = {
     text:'Does the treatment consist only of filtration, centrifugation, or the exchange of gas or heat?',
     type:'yesno',
     effect:(v,ctx)=>{
+      ctx.flags.nonInvasiveMatched = true;
       if(v==='yes') push(ctx,'IIa','Rule 3','Filtration, centrifugation, or gas/heat exchange');
       else push(ctx,'IIb','Rule 3','Other biological/chemical composition modification');
     },
@@ -952,11 +1001,11 @@ const MDR_NODES = {
   },
   m15y_4:{
     rule:'Rule 8 — Implants & long‑term surgical devices',
-    text:'Is it a breast implant, or a surgical mesh?',
+    text:'Is it a breast implant, a surgical mesh, a total or partial joint replacement, a spinal disc replacement implant, or an implantable device that contacts the spinal column? (Ancillary components such as screws, wedges, plates and instruments are excepted and classified on their own.)',
     type:'yesno',
     effect:(v,ctx)=>{
-      if(v==='yes') push(ctx,'III','Rule 8','Breast implant or surgical mesh');
-      else push(ctx,'IIb','Rule 8','Implantable / long‑term surgically‑invasive device (default, incl. joint replacements)');
+      if(v==='yes') push(ctx,'III','Rule 8','Breast implant, surgical mesh, joint replacement, or spinal‑column‑contact implant');
+      else push(ctx,'IIb','Rule 8','Implantable / long‑term surgically‑invasive device (default)');
     },
     next:()=> 'm16'
   },
@@ -967,13 +1016,20 @@ const MDR_NODES = {
     text:'Does the device depend on a source of energy other than that generated directly by the human body or by gravity — i.e. is it an active/powered device?',
     type:'yesno',
     effect:(v,ctx)=>{ ctx.flags.isActive = (v==='yes'); },
-    next:(v)=> v==='yes' ? 'm17' : 'RESULT'
+    next:(v)=> v==='yes' ? 'm16b' : 'RESULT'
+  },
+  m16b:{
+    rule:'Rule 22 — Closed‑loop therapeutic + diagnostic devices',
+    text:'Does the device combine an active therapeutic function with its own integrated/incorporated diagnostic function that, by itself, significantly determines patient management — i.e. it acts automatically on its own diagnostic input without a clinician in the loop (e.g. a closed‑loop insulin pump, an automated external defibrillator, a closed‑loop ventilator)?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.activeMatched = true; push(ctx,'III','Rule 22','Closed‑loop active therapeutic device with an integrated diagnostic function that significantly determines patient management'); } },
+    next:()=> 'm17'
   },
   m17:{
     rule:'Rule 9 — Active therapeutic devices',
     text:'Is it intended to administer or exchange energy to or from the body for a therapeutic purpose (e.g. physiotherapy, electrosurgery)?',
     type:'yesno',
-    next:(v)=> v==='yes' ? 'm17b' : 'm18'
+    next:(v)=> v==='yes' ? 'm17b' : 'm17rad'
   },
   m17b:{
     rule:'Rule 9 — Active therapeutic devices',
@@ -984,13 +1040,27 @@ const MDR_NODES = {
       if(v==='yes') push(ctx,'IIb','Rule 9','Potentially hazardous therapeutic energy exchange');
       else push(ctx,'IIa','Rule 9','Non‑hazardous therapeutic energy exchange');
     },
+    next:()=> 'm17rad'
+  },
+  m17rad:{
+    rule:'Rule 9 — Active therapeutic devices',
+    text:'Does it emit ionising radiation for a THERAPEUTIC purpose (e.g. a radiotherapy/linear‑accelerator device), or does it control, monitor, or directly influence the performance of such a device?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.activeMatched = true; push(ctx,'IIb','Rule 9','Emits (or controls/monitors) ionising radiation for therapeutic purposes'); } },
     next:()=> 'm17c'
   },
   m17c:{
     rule:'Rule 9 — Active therapeutic devices',
-    text:'Does it control, monitor, or directly influence the performance of an active therapeutic Class IIb device, or of an active implantable device?',
+    text:'Does it control, monitor, or directly influence the performance of an active THERAPEUTIC Class IIb device (not an implant)?',
     type:'yesno',
-    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.activeMatched = true; push(ctx,'III','Rule 9','Controls/monitors a critical active or implantable device'); } },
+    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.activeMatched = true; push(ctx,'IIb','Rule 9','Controls/monitors/influences an active therapeutic Class IIb device'); } },
+    next:()=> 'm17d'
+  },
+  m17d:{
+    rule:'Rule 9 — Active therapeutic devices',
+    text:'Does it control, monitor, or directly influence the performance of an ACTIVE IMPLANTABLE device (e.g. a pacemaker programmer)?',
+    type:'yesno',
+    effect:(v,ctx)=>{ if(v==='yes'){ ctx.flags.activeMatched = true; push(ctx,'III','Rule 9','Controls/monitors/influences an active implantable device'); } },
     next:()=> 'm18'
   },
   m18:{
@@ -1037,6 +1107,9 @@ const MDR_NODES = {
 };
 
 function finalizeMDR(ctx){
+  if(ctx.flags.reachedNonInvasive && !ctx.flags.nonInvasiveMatched){
+    push(ctx,'I','Rule 1','Default — non‑invasive device with no Rule 2, 3 or 4 applying');
+  }
   if(ctx.flags.isActive && !ctx.flags.activeMatched){
     push(ctx,'I','Rule 13','Other active device — no more specific rule applies');
   }
@@ -1058,28 +1131,29 @@ const IVDR_REF = [
 ];
 
 const MDR_REF = [
-  ['Rule 1','I','Default classification for any non‑invasive device not covered by Rules 2–4.'],
-  ['Rule 2','IIa / IIb','Channelling/storing blood or body liquids for eventual administration. IIb specifically for blood bags.'],
-  ['Rule 3','IIa / IIb / III','Modifying the biological/chemical composition of tissue, cells, blood or body liquids. IIa for filtration/centrifugation/gas‑heat exchange; III for in‑vitro embryo treatment; IIb otherwise.'],
-  ['Rule 4','IIa / IIb','Disinfecting or sterilising devices, or cleaning/disinfecting/hydrating contact lenses (IIb).'],
+  ['Rule 1','I','Default classification for any non‑invasive device not covered by Rules 2, 3 or 4.'],
+  ['Rule 2','IIa / IIb','Channelling/storing blood or body liquids for eventual administration. IIb for blood bags, or if connected to a Class IIa+ active device.'],
+  ['Rule 3','IIa / IIb / III','Modifying the biological/chemical composition of tissue, cells, blood or body liquids. IIa for filtration/centrifugation/gas‑heat exchange; III for in‑vitro embryo treatment or organ/tissue/cell storage solutions; IIb otherwise.'],
+  ['Rule 4','I / IIa / IIb','Non‑invasive devices in contact with injured skin or mucous membrane. I if mechanical barrier/compression/exudate absorption; IIb if for wounds breaching the dermis healing by secondary intent; IIa if managing the wound micro‑environment or otherwise.'],
   ['Rule 5','I / IIa / IIb','Body‑orifice (non‑surgical) invasive devices, by duration: transient I, short‑term IIa (I if confined to oral/ear/nasal cavity and non‑absorbed), long‑term IIb.'],
   ['Rule 6','IIa / IIb / III','Surgically invasive, transient use. IIb/III for heart, CNS, central circulatory contact, ionising radiation or biological effect.'],
   ['Rule 7','IIa / IIb / III','Surgically invasive, short‑term use — same escalation logic as Rule 6, plus absorption.'],
-  ['Rule 8','IIa / IIb / III','Implantable or long‑term surgically invasive. IIa for dental; III for heart/CNS/central‑circulatory contact, biological effect, absorption, chemical change, breast implants and surgical mesh; IIb default (incl. joint replacements).'],
-  ['Rule 9','IIa / IIb / III','Active therapeutic energy‑exchange devices. IIb if potentially hazardous; III if controlling/monitoring a critical active or implantable device.'],
-  ['Rule 10','IIa / IIb','Active diagnostic/monitoring devices. IIb for ionising radiation or vital‑parameter monitoring with danger potential; IIa otherwise.'],
+  ['Rule 8','IIa / IIb / III','Implantable or long‑term surgically invasive. IIa for dental; III for heart/CNS/central‑circulatory contact, biological effect, absorption, chemical change, breast implants, surgical mesh, joint replacements and spinal‑column‑contact implants; IIb default.'],
+  ['Rule 9','IIa / IIb / III','Active therapeutic energy‑exchange devices. IIb if hazardous exchange, therapeutic ionising radiation, or controlling a Class IIb therapeutic device; III only for controlling an active implantable device.'],
+  ['Rule 10','IIa / IIb','Active diagnostic/monitoring devices. IIb for ionising radiation (diagnostic/interventional) or vital‑parameter monitoring with danger potential; IIa otherwise.'],
   ['Rule 11','I / IIa / IIb / III','Software. III if wrong output could cause death/irreversible harm; IIb for serious harm/intervention or vital‑parameter monitoring; IIa for diagnostic/therapeutic info or non‑vital monitoring; I otherwise.'],
   ['Rule 12','IIa / IIb','Active devices administering/removing medicinal products or substances. IIb if potentially hazardous.'],
-  ['Rule 13','I','Catch‑all for any other active device not covered by Rules 9–12.'],
+  ['Rule 13','I','Catch‑all for any other active device not covered by Rules 9–12 or 22.'],
   ['Rule 14','III','Incorporates a human blood derivative or a medicinal substance with an ancillary action.'],
   ['Rule 15','IIb / III','Contraception or STI prevention. III if implantable or long‑term invasive.'],
-  ['Rule 16','IIa / IIb','Disinfecting devices for other medical devices (IIa), or specifically for invasive‑device end‑stage processing (IIb).'],
+  ['Rule 16','IIb / IIa+IIb','Contact‑lens disinfecting/cleaning/rinsing/hydrating devices: IIb. Disinfecting/sterilising other medical devices: IIa default, IIb for invasive‑device end‑stage processing.'],
   ['Rule 17','IIa','Devices specifically recording diagnostic images from X‑ray radiation.'],
-  ['Rule 18','III','Manufactured using human or animal‑origin tissues/cells, except devices contacting only intact skin.'],
+  ['Rule 18','I / III','Non‑viable human‑origin tissue/cells: always III. Non‑viable animal‑origin tissue/cells: III, except intact‑skin‑only contact, which is I.'],
   ['Rule 19','IIa / IIb / III','Devices incorporating nanomaterial, by potential for internal exposure: negligible IIa, low IIb, high/medium III.'],
-  ['Rule 20','IIb / III','Invasive inhalation devices administering medicinal products. III if critical impact on the drug or for life‑threatening conditions.'],
-  ['Rule 21','IIa / IIb / III','Substance‑based devices. IIa applied to skin only; IIb via body orifice, not absorbed; III if absorbed/locally dispersed.'],
-  ['Rule 22','IIa+','Annex XVI products without a medical purpose (cosmetic contact lenses, fillers, tattoo equipment, brain stimulation, etc.) — floor of IIa, several sub‑types reach III.']
+  ['Rule 20','IIa / IIb','Invasive inhalation devices administering medicinal products. IIa default; IIb if essential impact on drug efficacy/safety or for life‑threatening conditions.'],
+  ['Rule 21','IIa / IIb / III','Substance‑based devices. III if systemically absorbed (incl. GI‑tract acting substances); IIa for local action on skin or nasal/oral cavity to the pharynx; IIb default otherwise.'],
+  ['Rule 22','III','Active therapeutic devices with an integrated diagnostic function that itself significantly determines patient management (e.g. closed‑loop insulin pumps, automated external defibrillators).'],
+  ['Annex XVI','IIa+ (separate legislation)','Products without a medical purpose (cosmetic contact lenses, fillers, liposuction equipment, high‑intensity light/laser equipment, brain stimulation, etc.) are classified under Commission Implementing Regulation (EU) 2022/2346, using Rules 1–22 as if they had a medical purpose. Not itself one of the 22 rules.']
 ];
 
 /* =========================================================================
